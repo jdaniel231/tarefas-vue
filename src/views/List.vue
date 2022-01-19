@@ -1,11 +1,28 @@
 <template>
   <div class="container mt-2">
-    <b-card title="Titulo">
-      <b-card-text>descrição</b-card-text>
+    <div v-for="(task, index) in tasks" :key="index" >
+    <b-card :title="task.title" class="mb-2">
+      <b-card-text> {{task.description}} </b-card-text>
 
       <b-button variant="outline-secondary" class="mr-2" >Editar</b-button>
       <b-button variant="outline-danger" class="mr-2" >Excluir</b-button>
 
     </b-card>
+    </div>
   </div>
 </template>
+
+<script>
+export default {
+  name: "List",
+
+  data() {
+    return {
+      tasks: []
+    }
+  },
+  created(){
+    this.tasks = (localStorage.getItem("tasks")) ? JSON.parse(localStorage.getItem("tasks")) : [];
+  }
+}
+</script>
