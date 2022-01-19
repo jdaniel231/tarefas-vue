@@ -14,6 +14,10 @@ Vue.use(Vuelidate);
 
 Vue.config.productionTip = false
 
+import axios from 'axios';
+import { Model } from 'vue-api-query';
+Model.$http = axios;
+
 new Vue({
   router,
   render: h => h(App)
