@@ -52,6 +52,7 @@
 
 import ToastMixin from "@/mixins/toastMixin.js"
 import { required, minLength } from "vuelidate/lib/validators";
+import TasksModel from '@/models/TasksModel';
 
 export default {
   name: 'Form',
@@ -68,11 +69,10 @@ export default {
     }
   },
 
-  created() {
-    if(this.$route.params.index === 0 || this.$router.params.index !== undefined) {
+  async created() {
+    if(this.$route.params.taskId) {
       this.methodSave = "update";
-      let tasks = JSON.parse(localStorage.getItem("tasks"));
-      this.form = tasks[this.$route.params.index]
+      this.form = await TasksModel.find(this.$route.params.taskId)
       
     }
   },
@@ -80,17 +80,15 @@ export default {
   methods: {
     saveTask() {
       if(this.methodSave === "update"){
-        let tasks = JSON.parse(localStorage.getItem("tasks"));
-        tasks[this.$route.params.index] = this.form;
-        localStorage.setItem("tasks", JSON.stringify(tasks));
+        this.form.save();
         this.showToast("success", "Sucesso!", "Tarefa atualizada com suceso");
         this.$router.push({name: "list"});
         retunr;
       }
 
-      let tasks = (localStorage.getItem("tasks")) ? JSON.parse(localStorage.getItem("tasks")) : [];
-      tasks.push(this.form);
-      localStorage.setItem("tasks", JSON.stringify(tasks));
+      const task =  new TasksModel(this.form);
+      task.save();
+
       this.showToast("success", "Sucesso!", "Tarefa criado com suceso");
       this.$router.push({name: "list"});
     }
