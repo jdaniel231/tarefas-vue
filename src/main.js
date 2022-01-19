@@ -8,6 +8,10 @@ import 'bootstrap-vue/dist/bootstrap-vue.css'
 
 Vue.use(BootstrapVue)
 
+//Validate
+import Vuelidate from 'vuelidate';
+Vue.use(Vuelidate);
+
 Vue.config.productionTip = false
 
 new Vue({
