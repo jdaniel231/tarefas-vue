@@ -27,7 +27,7 @@
         ></b-form-textarea>
       </b-form-group>
 
-      <b-button type="button" variant="outline-primary" >Salvar</b-button>
+      <b-button type="button" variant="outline-primary" @click="saveTask">Salvar</b-button>
 
     </b-form>
   </div>
@@ -43,6 +43,15 @@ export default {
         subject:"",
         description: ""
       }
+    }
+  },
+
+  methods: {
+    saveTask() {
+      let tasks = (localStorage.getItem("tasks")) ? JSON.parse(localStorage.getItem("tasks")) : [];
+      tasks.push(this.form);
+      localStorage.setItem("tasks", JSON.stringify(tasks));
+      this.$router.push({name: "list"});
     }
   }
 }
