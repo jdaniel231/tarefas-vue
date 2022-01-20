@@ -16,12 +16,31 @@
         class="mr-2"
       ></b-form-select>
 
-      <b-button variant="outline-secondary"  @click="filterTasks" class="mr-2">Buscar</b-button>
-      <b-button variant="outline-secondary"  @click="clearFilter" class="mr-2">Limpar filtro</b-button>
+      <b-button 
+        variant="outline-secondary"  
+        @click="filterTasks" 
+        class="mr-2"
+        v-b-tooltip.hover
+        title="Buscar"
+      ><i class="fa fa-search"></i></b-button>
+
+      <b-button 
+        variant="outline-secondary"  
+        @click="clearFilter" 
+        class="mr-2"
+        v-b-tooltip.hover
+        title="Limpar filtro"
+      > <i class="fa fa-times"></i></b-button>
 
     </b-form>
 
-    <template v-if="isTasksEmpety">
+     <template v-if="isLoading">
+      <div class="loading-spin">
+        <b-spinner style="width: 5rem; height: 5rem;"></b-spinner>
+      </div>
+     </template>
+
+    <template v-if="isTasksEmpty  && !isLoading">
       <div class="empty-data mt-2 ">
         <img src="../assets/images/empty-data.svg"  class="empty-data-image">
         <b-button
@@ -32,7 +51,7 @@
         > Criar tarefa </b-button>
       </div>
     </template>
-    <template v-else>
+    <template v-if="!isTasksEmpty  && !isLoading">
       <div v-for="(task) in tasks" :key="task.id" >
       <b-card class="mb-2" :class="{ 'finished-task': isFinished(task) }" >
 
@@ -49,11 +68,31 @@
 
         <b-card-text> {{task.description}} </b-card-text>
 
-        <b-button variant="outline-secondary" class="mr-2" @click="updateStatus(task.id, status.FINISHED)">Concluir</b-button>
-        <b-button variant="outline-secondary" class="mr-2" @click="updateStatus(task.id, status.ARCHIVED)">Arquivar</b-button>
+        <b-button 
+          variant="outline-secondary" 
+          class="mr-2" 
+          @click="updateStatus(task.id, status.FINISHED)"
+          v-b-tooltip.hover
+          title="Concluir"  
+        ><i class="fa fa-check"></i> </b-button>
+        <b-button 
+          variant="outline-secondary" 
+          class="mr-2" 
+          @click="updateStatus(task.id, status.ARCHIVED)"
+          v-b-tooltip.hover
+          title="Arquivar"
+          ><i class="fa fa-archive"></i> </b-button>
 
-        <b-button variant="outline-secondary" class="mr-2" @click="edit(task.id)">Editar</b-button>
-        <b-button variant="outline-danger" class="mr-2" @click="remove(task.id)" >Excluir</b-button>
+        <b-button 
+          variant="outline-secondary" 
+          class="mr-2" 
+          @click="edit(task.id)"
+        ><i class="fa fa-edit" ></i></b-button>
+        <b-button 
+          variant="outline-danger" 
+          class="mr-2" 
+          @click="remove(task.id)" 
+        ><i class="fa fa-times"></i></b-button>
 
       </b-card>
       </div>
@@ -75,9 +114,12 @@
 <script>
 import TasksModel from '@/models/TasksModel';
 import Status from "@/valueObjects/status.js";
+import ToastMixin from "@/mixins/toastMixin.js"
 
 export default {
   name: "List",
+
+  mixins: [ToastMixin],
 
   data() {
     return {
@@ -94,11 +136,19 @@ export default {
         { value: Status.OPEN, text: "Aberto" },
         { value: Status.FINISHED, text: "Finalizado" },
         { value: Status.ARCHIVED, text: "Arquivado" },
-      ]
-    }
+      ], 
+      isLoading: false
+    };
   },
   async created(){
-    this.tasks = await TasksModel.params({ status: this.statusList }).get();
+    this.isLoading = true; 
+    this.tasks = await TasksModel.params({ 
+        status: [
+          this.status.OPEN,
+          this.status.FINISHED,
+        ] 
+      }).get();
+      this.isLoading = false;
   },
    methods: {
     edit(taskId) {
@@ -200,7 +250,7 @@ export default {
   },
 
   computed: {
-    isTasksEmpety(){
+    isTasksEmpty(){
       return this.tasks.length === 0;
     },
     
@@ -227,5 +277,12 @@ export default {
   }
   .finished-task > .card-body > h4, .finished-task > .card-body > p {
     text-decoration: line-through;
+  }
+
+  .loading-spin { 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 65vh;
   }
 </style>
