@@ -37,6 +37,15 @@
 
       </b-form-group>
 
+      <b-form-group label="Data de vencimento" label-for="dateOverdue" >
+        <b-form-datepicker
+          id="dateOverdue"
+          v-model="form.dateOverdue"
+          label-no-date-selected="Selecione uma data"
+          :min="getToday()"
+        ></b-form-datepicker>
+      </b-form-group> 
+
       <b-form-group
         label="Status"
         label-for="status"
@@ -74,7 +83,8 @@ export default {
       form: {
         subject:"",
         description: "",
-        status: 1
+        status: Status.OPEN,
+        dateOverdue: ""
       },
       methodSave: "new",
       optionsStatus: [
@@ -110,6 +120,10 @@ export default {
 
       this.showToast("success", "Sucesso!", "Tarefa criado com suceso");
       this.$router.push({name: "list"});
+    },
+
+    getToday() {
+      return new Date().toISOString().split('T')[0];
     }
   },
 
