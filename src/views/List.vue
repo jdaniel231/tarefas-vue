@@ -34,7 +34,19 @@
     </template>
     <template v-else>
       <div v-for="(task) in tasks" :key="task.id" >
-      <b-card :title="task.subject" class="mb-2" :class="{ 'finished-task': isFinished(task) }" >
+      <b-card class="mb-2" :class="{ 'finished-task': isFinished(task) }" >
+
+        <div class="d-flex justify-content-between">
+          <b-card-title>
+            <span> {{task.subject}} </span>
+          </b-card-title>
+
+          <span>
+            <b-badge  :variant="variantOverdue(task.dateOverdue, task.status)">
+               {{overduePresenter(task.dateOverdue)}} </b-badge>
+          </span>
+        </div>
+
         <b-card-text> {{task.description}} </b-card-text>
 
         <b-button variant="outline-secondary" class="mr-2" @click="updateStatus(task.id, status.FINISHED)">Concluir</b-button>
@@ -71,7 +83,7 @@ export default {
     return {
       tasks: [],
       taskSelected: [],
-      statusList: [Status.OPEN, Status.FINISHED],
+      // statusList: [Status.OPEN, Status.FINISHED],
       status: Status,
       filter:{
         subject: null,
@@ -130,12 +142,6 @@ export default {
       filter = this.clean(filter);
       this.tasks = await TasksModel.params(filter).get();
     },
-
-   async filterTasks() {
-    let filter = { ... this.filter };
-    filter = this.clean(filter);
-    this.tasks = await TasksModel.params(filter).get();
-  },
  
   clean(obj) {
     for(var propName in obj) {
@@ -158,6 +164,37 @@ export default {
         this.status.FINISHED,
       ]
     }).get();
+  },
+
+  overduePresenter(dateOverdue) {
+    if(!dateOverdue) {
+      return
+    }
+    return dateOverdue.split('-').reverse().join('/');
+  },
+  variantOverdue(dateOverdue, taskStatus) {
+    if(!dateOverdue) { //se não tem data, retorna a cor padrão
+      return 'light';
+    }
+ 
+    //se a tarefa está concluída, cor verde
+    if(taskStatus === this.status.FINISHED){
+      return 'success';
+    }
+       
+    //se a tarefa vence hoje, cor amarela
+    let dateNow = new Date().toISOString().split('T')[0];
+    if(dateOverdue === dateNow) {
+      return 'warning';
+    }
+ 
+    //se a tarefa já venceu, cor vermelha
+    if(dateOverdue < dateNow) {
+      return 'danger';
+    }
+ 
+    //caso não entre em nenhuma condição, cor padrão
+    return 'light';
   }
     
   },
