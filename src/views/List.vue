@@ -1,5 +1,26 @@
 <template>
   <div class="container mt-2">
+
+    <b-form inline class="mb-2" >
+      <b-form-input
+        v-model="filter.subject"
+        id="subject"
+        placeholder="Ex.: Lavar o carro"
+        class="mr-2"
+        autocomplete="off"
+      ></b-form-input>
+
+      <b-form-select
+        v-model="filter.status"
+        :options="optionsStatus"
+        class="mr-2"
+      ></b-form-select>
+
+      <b-button variant="outline-secondary"  @click="filterTasks" class="mr-2">Buscar</b-button>
+      <b-button variant="outline-secondary"  @click="clearFilter" class="mr-2">Limpar filtro</b-button>
+
+    </b-form>
+
     <template v-if="isTasksEmpety">
       <div class="empty-data mt-2 ">
         <img src="../assets/images/empty-data.svg"  class="empty-data-image">
@@ -51,7 +72,17 @@ export default {
       tasks: [],
       taskSelected: [],
       statusList: [Status.OPEN, Status.FINISHED],
-      status: Status
+      status: Status,
+      filter:{
+        subject: null,
+        status: null
+      },
+      optionsStatus: [
+         { value: null, text: "Selecione status" },
+        { value: Status.OPEN, text: "Aberto" },
+        { value: Status.FINISHED, text: "Finalizado" },
+        { value: Status.ARCHIVED, text: "Arquivado" },
+      ]
     }
   },
   async created(){
@@ -81,13 +112,53 @@ export default {
       task.status = status
       await task.save()
 
-      this.showToast("success", "Sucesso!", "Tarefa criado com suceso");
-      this.tasks = await TasksModel.params({ status: this.statusList }).get();
+      this.tasks = await TasksModel.params({ 
+        status:[
+          this.status.OPEN,
+          this.status.FINISHED
+        ]
+      }).get();
+      this.showToast("success", "Sucesso!", "Tarefa atualizada com suceso");
     },
 
     isFinished(task) {
       return task.status === Status.FINISHED;
+    },
+
+    async filterTasks(){
+      let filter = { ... this.filter };
+      filter = this.clean(filter);
+      this.tasks = await TasksModel.params(filter).get();
+    },
+
+   async filterTasks() {
+    let filter = { ... this.filter };
+    filter = this.clean(filter);
+    this.tasks = await TasksModel.params(filter).get();
+  },
+ 
+  clean(obj) {
+    for(var propName in obj) {
+      if(obj[propName] === null || obj[propName] === undefined) {
+        delete obj[propName];
+      }
     }
+    return obj;
+  },
+
+  async clearFilter() {
+    this.filter = {
+      subject: null,
+      status: null
+    };
+
+    this.tasks = await TasksModel.params({
+      status: [
+        this.status.OPEN,
+        this.status.FINISHED,
+      ]
+    }).get();
+  }
     
   },
 
