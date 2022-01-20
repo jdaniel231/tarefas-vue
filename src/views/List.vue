@@ -13,8 +13,11 @@
     </template>
     <template v-else>
       <div v-for="(task) in tasks" :key="task.id" >
-      <b-card :title="task.subject" class="mb-2">
+      <b-card :title="task.subject" class="mb-2" :class="{ 'finished-task': isFinished(task) }" >
         <b-card-text> {{task.description}} </b-card-text>
+
+        <b-button variant="outline-secondary" class="mr-2" @click="updateStatus(task.id, status.FINISHED)">Concluir</b-button>
+        <b-button variant="outline-secondary" class="mr-2" @click="updateStatus(task.id, status.ARCHIVED)">Arquivar</b-button>
 
         <b-button variant="outline-secondary" class="mr-2" @click="edit(task.id)">Editar</b-button>
         <b-button variant="outline-danger" class="mr-2" @click="remove(task.id)" >Excluir</b-button>
@@ -38,6 +41,7 @@
 
 <script>
 import TasksModel from '@/models/TasksModel';
+import Status from "@/valueObjects/status.js";
 
 export default {
   name: "List",
@@ -46,10 +50,12 @@ export default {
     return {
       tasks: [],
       taskSelected: [],
+      statusList: [Status.OPEN, Status.FINISHED],
+      status: Status
     }
   },
   async created(){
-    this.tasks = await TasksModel.get()
+    this.tasks = await TasksModel.params({ status: this.statusList }).get();
   },
    methods: {
     edit(taskId) {
@@ -66,8 +72,21 @@ export default {
 
     async confirmRemoveTask() {
       this.taskSelected.delete();
-      this.tasks = await TasksModel.get(); 
+      this.tasks = await TasksModel.params({ status: this.statusList }).get();
       this.hideModal();
+    },
+
+    async updateStatus(taskId, status) {
+      let task = await TasksModel.find(taskId);
+      task.status = status
+      await task.save()
+
+      this.showToast("success", "Sucesso!", "Tarefa criado com suceso");
+      this.tasks = await TasksModel.params({ status: this.statusList }).get();
+    },
+
+    isFinished(task) {
+      return task.status === Status.FINISHED;
     }
     
   },
@@ -75,7 +94,8 @@ export default {
   computed: {
     isTasksEmpety(){
       return this.tasks.length === 0;
-    }
+    },
+    
   }
 }
 </script>
@@ -91,5 +111,13 @@ export default {
   .empty-data-image{
     width: 300px;
     height: 300px;
+  }
+
+  
+  .finished-task {
+    opacity: 0.7
+  }
+  .finished-task > .card-body > h4, .finished-task > .card-body > p {
+    text-decoration: line-through;
   }
 </style>
